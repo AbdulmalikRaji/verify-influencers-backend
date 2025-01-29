@@ -95,11 +95,3 @@ Ensure that the environment variables are set correctly in the .env file for the
 
 ### License
 This project is licensed under the MIT License.
-
-### Key Sections:
-
-1. **Setup**: Provides instructions on cloning the repo, installing dependencies, and setting up the database.
-2. **Run the Application**: Explains how to run the app with `go run`.
-3. **API Usage**: Details the endpoint, required parameters, and example requests/responses.
-4. **Database**: Mentions the need for database migrations or manual setup.
-5. **Additional Notes**: Provides extra details on the source parameter and any other relevant information.
