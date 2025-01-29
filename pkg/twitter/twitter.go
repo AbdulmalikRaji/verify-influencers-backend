@@ -33,14 +33,13 @@ func GetTwitterClaimsV2(username string, startTime, endTime string) ([]Tweet, er
 	}
 
 	url := fmt.Sprintf("https://api.x.com/2/tweets/search/recent?query=from:%s&start_time=%s&end_time=%s&tweet.fields=created_at", username, startTime, endTime)
-	fmt.Println("url: " + url)
 	req, _ := http.NewRequest("GET", url, nil)
 	req.Header.Set("Authorization", "Bearer "+bearerToken)
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to fetch tweets: %s", err.Error())
 	}
 	defer resp.Body.Close()
 

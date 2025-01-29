@@ -12,7 +12,6 @@ import (
 	"github.com/abdulmalikraji/verify-influencers-backend/pkg/twitter"
 	"github.com/abdulmalikraji/verify-influencers-backend/utils"
 	"github.com/gofiber/fiber/v2"
-	"gorm.io/gorm"
 )
 
 type ClaimService interface {
@@ -44,7 +43,7 @@ func (s *claimService) GetInfluencerClaims(ctx *fiber.Ctx, request dto.GetInflue
 		}
 
 		influencer, err = s.influencerDao.FindByUsername(request.Username)
-		if err != nil && err == gorm.ErrRecordNotFound {
+		if err != nil && err.Error() == "record not found" {
 
 			user, err := twitter.GetTwitterUserByUsername(request.Username)
 			if err != nil {
@@ -78,13 +77,13 @@ func (s *claimService) GetInfluencerClaims(ctx *fiber.Ctx, request dto.GetInflue
 			}
 
 			parsedClaim, err := gemini.ExtractClaim(tweet.Text)
-			if err!= nil {
-                return dto.GetInfluencerClaimsResponse{}, fiber.StatusInternalServerError, err
-            }
+			if err != nil {
+				return dto.GetInfluencerClaimsResponse{}, fiber.StatusInternalServerError, err
+			}
 
 			claim := models.Claim{
 				Content:      tweet.Text,
-				ParsedClaim: parsedClaim,
+				ParsedClaim:  parsedClaim,
 				Source:       "tweet",
 				ClaimedAt:    tweetTime,
 				InfluencerID: influencer.ID,
@@ -92,9 +91,9 @@ func (s *claimService) GetInfluencerClaims(ctx *fiber.Ctx, request dto.GetInflue
 			}
 
 			err = s.claimDao.Insert(claim)
-			if err!= nil {
-                return dto.GetInfluencerClaimsResponse{}, fiber.StatusInternalServerError, err
-            }
+			if err != nil {
+				return dto.GetInfluencerClaimsResponse{}, fiber.StatusInternalServerError, err
+			}
 
 			tweetClaim := dto.Claim{
 				Raw:       tweet.Text,

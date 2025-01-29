@@ -9,7 +9,7 @@ import (
 // ParseTweetTime parses a tweet's timestamp string to time.Time
 func ParseTweetTime(tweetTimeStr string) (time.Time, error) {
 	// Define the format for the tweet timestamp
-	format := "Mon Jan 02 15:04:05 -0700 2006"
+	format := time.RFC3339Nano
 
 	// Parse the string into time.Time
 	tweetTime, err := time.Parse(format, tweetTimeStr)
@@ -19,6 +19,7 @@ func ParseTweetTime(tweetTimeStr string) (time.Time, error) {
 
 	return tweetTime, nil
 }
+
 
 func ConvertTimeToXFormat(t time.Time) string {
 	return t.Format(time.RFC3339)

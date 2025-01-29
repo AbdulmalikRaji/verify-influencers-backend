@@ -43,7 +43,7 @@ func gracefulShutdown(app *fiber.App, client connection.Client) {
 	// Close the PostgreSQL database connection
 	database, err := client.PostgresConnection.DB()
 	if err != nil {
-		log.Printf("PostgreSQL Closing ERROR :", err)
+		log.Println("PostgreSQL Closing ERROR :", err)
 	}
 	database.Close()
 	log.Printf("PostgreSQL Closed")

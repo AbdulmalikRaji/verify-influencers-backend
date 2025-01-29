@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"log"
+	"time"
 
 	"github.com/abdulmalikraji/verify-influencers-backend/dto"
 	"github.com/abdulmalikraji/verify-influencers-backend/services"
@@ -34,7 +35,30 @@ func (s claimController) GetInfluencerClaims(c *fiber.Ctx) error {
 		})
 	}
 
-	log.Println(claim)
+	// Manually parse start_date and end_date
+	if c.Query("start_date") != "" {
+		claim.StartDate, err = time.Parse("2006-01-02", c.Query("start_date"))
+		if err != nil {
+			log.Println("Invalid start_date format:", err)
+			return c.Status(fiber.StatusBadRequest).JSON(&fiber.Map{
+				"success": false,
+				"message": "Invalid start_date format. Use YYYY-MM-DD.",
+				"data":    nil,
+			})
+		}
+	}
+
+	if c.Query("end_date") != "" {
+		claim.EndDate, err = time.Parse("2006-01-02", c.Query("end_date"))
+		if err != nil {
+			log.Println("Invalid end_date format:", err)
+			return c.Status(fiber.StatusBadRequest).JSON(&fiber.Map{
+				"success": false,
+				"message": "Invalid end_date format. Use YYYY-MM-DD.",
+				"data":    nil,
+			})
+		}
+	}
 
 	response, status, err := s.service.GetInfluencerClaims(c, claim)
 
