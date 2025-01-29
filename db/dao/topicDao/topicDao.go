@@ -10,6 +10,7 @@ type DataAccess interface {
 	// Postgres Data Access Object Methods
 	FindAll() ([]models.Topic, error)
 	FindById(id int) (models.Topic, error)
+	FindByName(name string) (models.Topic, error)
 	Insert(item models.Topic) (models.Topic, error)
 	Update(item models.Topic) error
 	SoftDelete(id int) error
@@ -40,6 +41,16 @@ func (d dataAccess) FindById(id int) (models.Topic, error) {
 
 	var topic models.Topic
 	result := d.db.Table(models.Topic{}.TableName()).Where("id = ? AND del_flg = ?", id, false).First(&topic)
+	if result.Error != nil {
+		return models.Topic{}, result.Error
+	}
+	return topic, nil
+}
+
+func (d dataAccess) FindByName(name string) (models.Topic, error) {
+
+	var topic models.Topic
+	result := d.db.Table(models.Topic{}.TableName()).Where("name = ? AND del_flg = ?", name, false).First(&topic)
 	if result.Error != nil {
 		return models.Topic{}, result.Error
 	}

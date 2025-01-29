@@ -5,10 +5,14 @@ import (
 	"time"
 
 	"github.com/abdulmalikraji/verify-influencers-backend/db/dao/claimDao"
+	"github.com/abdulmalikraji/verify-influencers-backend/db/dao/claimVerificationDao"
 	"github.com/abdulmalikraji/verify-influencers-backend/db/dao/influencerDao"
+	"github.com/abdulmalikraji/verify-influencers-backend/db/dao/influencerTopicDao"
+	"github.com/abdulmalikraji/verify-influencers-backend/db/dao/topicDao"
 	"github.com/abdulmalikraji/verify-influencers-backend/db/models"
 	"github.com/abdulmalikraji/verify-influencers-backend/dto"
 	"github.com/abdulmalikraji/verify-influencers-backend/pkg/gemini"
+	"github.com/abdulmalikraji/verify-influencers-backend/pkg/serper"
 	"github.com/abdulmalikraji/verify-influencers-backend/pkg/twitter"
 	"github.com/abdulmalikraji/verify-influencers-backend/utils"
 	"github.com/gofiber/fiber/v2"
@@ -19,14 +23,26 @@ type ClaimService interface {
 }
 
 type claimService struct {
-	claimDao      claimDao.DataAccess
-	influencerDao influencerDao.DataAccess
+	claimDao             claimDao.DataAccess
+	influencerDao        influencerDao.DataAccess
+	influencerTopicDao   influencerTopicDao.DataAccess
+	topicDao             topicDao.DataAccess
+	claimVerificationDao claimVerificationDao.DataAccess
 }
 
-func NewClaimService(claimDao claimDao.DataAccess, influencerDao influencerDao.DataAccess) ClaimService {
+func NewClaimService(
+	claimDao claimDao.DataAccess,
+	influencerDao influencerDao.DataAccess,
+	influencerTopicDao influencerTopicDao.DataAccess,
+	topicDao topicDao.DataAccess,
+	claimVerificationDao claimVerificationDao.DataAccess,
+) ClaimService {
 	return &claimService{
-		claimDao:      claimDao,
-		influencerDao: influencerDao,
+		claimDao:             claimDao,
+		influencerDao:        influencerDao,
+		influencerTopicDao:   influencerTopicDao,
+		topicDao:             topicDao,
+		claimVerificationDao: claimVerificationDao,
 	}
 }
 
@@ -90,6 +106,8 @@ func (s *claimService) GetInfluencerClaims(ctx *fiber.Ctx, request dto.GetInflue
 				SourceURL:    fmt.Sprintf("https://x.com/%s/status/%s", request.Username, tweet.ID),
 			}
 
+			// use claim model in anoter func for analysis and verification here
+
 			err = s.claimDao.Insert(claim)
 			if err != nil {
 				return dto.GetInfluencerClaimsResponse{}, fiber.StatusInternalServerError, err
@@ -107,4 +125,80 @@ func (s *claimService) GetInfluencerClaims(ctx *fiber.Ctx, request dto.GetInflue
 	}
 
 	return dto.GetInfluencerClaimsResponse{Claims: claims, Username: request.Username}, fiber.StatusOK, nil
+}
+
+func (s *claimService) AnalyzeAndVerifyClaim(claim models.Claim) error {
+	// Step 1: Extract Topic
+	topic, err := gemini.ExtractTopic(claim.ParsedClaim)
+	if err != nil {
+		return err
+	}
+
+	// Check if topic exists, else create
+	existingTopic, err := s.topicDao.FindByName(topic)
+	if err != nil && err.Error() == "record not found" {
+		newTopic := models.Topic{
+			Name:      topic,
+			CreatedAt: time.Now(),
+			DelFlg:    false,
+		}
+		existingTopic, err = s.topicDao.Insert(newTopic)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Step 2: Verify Claim and Get Score
+	verificationResult, err := serper.VerifyClaim(claim.ParsedClaim)
+	if err != nil {
+		return err
+	}
+
+	result, err := gemini.GetScore(verificationResult.SearchParameters.Query, verificationResult.ResultStr)
+	if err != nil {
+		return err
+	}
+
+	// Step 3: Determine Status Based on Score
+	trustScore := result.Score // AI provides a score between 0 and 1
+	var status string
+
+	if trustScore >= 0.75 {
+		status = "Verified"
+	} else if trustScore >= 0.4 {
+		status = "Questionable"
+	} else {
+		status = "Debunked"
+	}
+
+	// Step 4: Store Verification Result
+	claimVerification := models.ClaimVerification{
+		ClaimID: claim.ID,
+		//VerifiedBy: ,
+		Status:    status,
+		Score:     trustScore,
+		Evidence:  result.BestResult.Title,
+		Comment:   result.BestResult.Snippet,
+		SourceUrl: result.BestResult.Link,
+		CreatedAt: time.Now(),
+		DelFlg:    false,
+	}
+	_, err = s.claimVerificationDao.Insert(claimVerification)
+	if err != nil {
+		return err
+	}
+
+	// Step 5: Link Influencer to Topic
+	influencerTopic := models.InfluencerTopic{
+		InfluencerID: claim.InfluencerID,
+		TopicID:      existingTopic.ID,
+		CreatedAt:    time.Now(),
+		DelFlg:       false,
+	}
+	_, err = s.influencerTopicDao.Insert(influencerTopic)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

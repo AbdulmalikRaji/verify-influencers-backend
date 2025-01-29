@@ -1,4 +1,4 @@
-package claimVerificationVerificationDao
+package claimVerificationDao
 
 import (
 	"github.com/abdulmalikraji/verify-influencers-backend/db/connection"
