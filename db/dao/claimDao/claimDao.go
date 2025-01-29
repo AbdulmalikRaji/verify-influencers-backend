@@ -54,7 +54,7 @@ func (d dataAccess) FindAllByInfluencerId(influencerId string) ([]models.Claim, 
 func (d dataAccess) FindById(id int) (models.Claim, error) {
 
 	var claim models.Claim
-	result := d.db.Table(models.Claim{}.TableName()).Where("claim_id = ? AND del_flg = ?", id, false).First(&claim)
+	result := d.db.Table(models.Claim{}.TableName()).Where("id = ? AND del_flg = ?", id, false).First(&claim)
 	if result.Error != nil {
 		return models.Claim{}, result.Error
 	}
@@ -102,7 +102,7 @@ func (d dataAccess) Insert(item models.Claim) error {
 
 func (d dataAccess) Update(item models.Claim) error {
 
-	result := d.db.Table(item.TableName()).Where("claim_id = ? ", item.ID).Updates(&item)
+	result := d.db.Table(item.TableName()).Where("id = ? ", item.ID).Updates(&item)
 	if result.Error != nil {
 		return result.Error
 	}
@@ -114,7 +114,7 @@ func (d dataAccess) SoftDelete(id int) error {
 
 	var item models.Claim
 
-	result := d.db.Table(item.TableName()).Where("claim_id = ? ", id).Update("del_flg", true)
+	result := d.db.Table(item.TableName()).Where("id = ? ", id).Update("del_flg", true)
 	if result.Error != nil {
 		return result.Error
 	}
@@ -126,7 +126,7 @@ func (d dataAccess) Delete(id int) error {
 
 	var item models.Claim
 
-	result := d.db.Table(item.TableName()).Where("claim_id = ? ", id).Delete(&item)
+	result := d.db.Table(item.TableName()).Where("id = ? ", id).Delete(&item)
 	if result.Error != nil {
 		return result.Error
 	}

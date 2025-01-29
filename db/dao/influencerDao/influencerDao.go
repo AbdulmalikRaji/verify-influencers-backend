@@ -40,7 +40,7 @@ func (d dataAccess) FindAll() ([]models.Influencer, error) {
 func (d dataAccess) FindById(id int) (models.Influencer, error) {
 
 	var influencer models.Influencer
-	result := d.db.Table(models.Influencer{}.TableName()).Where("influencer_id = ? AND del_flg = ?", id, false).First(&influencer)
+	result := d.db.Table(models.Influencer{}.TableName()).Where("id = ? AND del_flg = ?", id, false).First(&influencer)
 	if result.Error != nil {
 		return models.Influencer{}, result.Error
 	}
@@ -70,7 +70,7 @@ func (d dataAccess) Insert(item models.Influencer) (models.Influencer, error) {
 
 func (d dataAccess) Update(item models.Influencer) error {
 
-	result := d.db.Table(item.TableName()).Where("influencer_id = ? ", item.ID).Updates(&item)
+	result := d.db.Table(item.TableName()).Where("id = ? ", item.ID).Updates(&item)
 	if result.Error != nil {
 		return result.Error
 	}
@@ -82,7 +82,7 @@ func (d dataAccess) SoftDelete(id int) error {
 
 	var item models.Influencer
 
-	result := d.db.Table(item.TableName()).Where("influencer_id = ? ", id).Update("del_flg", true)
+	result := d.db.Table(item.TableName()).Where("id = ? ", id).Update("del_flg", true)
 	if result.Error != nil {
 		return result.Error
 	}
@@ -94,7 +94,7 @@ func (d dataAccess) Delete(id int) error {
 
 	var item models.Influencer
 
-	result := d.db.Table(item.TableName()).Where("influencer_id = ? ", id).Delete(&item)
+	result := d.db.Table(item.TableName()).Where("id = ? ", id).Delete(&item)
 	if result.Error != nil {
 		return result.Error
 	}
