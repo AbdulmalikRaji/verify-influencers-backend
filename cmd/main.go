@@ -10,9 +10,16 @@ import (
 	"github.com/abdulmalikraji/verify-influencers-backend/db/connection"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/joho/godotenv"
 )
 
 func main() {
+
+	//load ennvironment variables
+	err := godotenv.Load()
+	if err != nil {
+		log.Println("Error loading .env file:", err)
+	}
 
 	client := connection.New()
 
@@ -21,6 +28,12 @@ func main() {
 	app.Use(cors.New())
 
 	config.InitializeRoutes(app, client)
+
+	// testCase, err := podchaser.FindPodcasts("Dr Gabrielle Lyon")
+	// if err != nil {
+	// 	log.Fatalf("Error finding Pod: %v\n", err)
+	// }
+	// fmt.Println("Test result: ", testCase)
 
 	// Start the server in a goroutine
 	go func() {

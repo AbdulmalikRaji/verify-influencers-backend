@@ -8,9 +8,6 @@ import (
 	"os"
 )
 
-var apiKey = os.Getenv("SERPER_API_KEY")
-var apiURL = os.Getenv("SERPER_SEARCH_URL")
-
 // SearchResult represents the API response structure
 type SearchResult struct {
 	SearchParameters struct {
@@ -31,6 +28,10 @@ type SearchResult struct {
 }
 
 func VerifyClaim(claim string) (*SearchResult, error) {
+
+	var apiKey = os.Getenv("SERPER_API_KEY")
+	var apiURL = os.Getenv("SERPER_SCHOLAR_SEARCH_URL")
+
 	// Marshal claim into JSON payload
 	payload, err := json.Marshal(map[string]string{"q": claim})
 	if err != nil {

@@ -15,6 +15,7 @@ import (
 	"github.com/abdulmalikraji/verify-influencers-backend/pkg/serper"
 	"github.com/abdulmalikraji/verify-influencers-backend/pkg/twitter"
 	"github.com/abdulmalikraji/verify-influencers-backend/utils"
+	"github.com/abdulmalikraji/verify-influencers-backend/utils/enums"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -77,12 +78,12 @@ func (s *claimService) GetInfluencerClaims(ctx *fiber.Ctx, request dto.GetInflue
 				URL:            user.URL,
 				DelFlg:         false,
 			}
-			influencer, err = s.influencerDao.Insert(newInfluencer)
-			if err != nil {
-				return dto.GetInfluencerClaimsResponse{}, fiber.StatusInternalServerError, err
-			}
-		}
-		if err != nil {
+			fmt.Println(newInfluencer)
+			// influencer, err = s.influencerDao.Insert(newInfluencer)
+			// if err != nil {
+			// 	return dto.GetInfluencerClaimsResponse{}, fiber.StatusInternalServerError, err
+			// }
+		} else if err != nil {
 			return dto.GetInfluencerClaimsResponse{}, fiber.StatusInternalServerError, err
 		}
 
@@ -96,6 +97,9 @@ func (s *claimService) GetInfluencerClaims(ctx *fiber.Ctx, request dto.GetInflue
 			if err != nil {
 				return dto.GetInfluencerClaimsResponse{}, fiber.StatusInternalServerError, err
 			}
+			if parsedClaim == "" {
+				continue
+			}
 
 			claim := models.Claim{
 				Content:      tweet.Text,
@@ -107,20 +111,25 @@ func (s *claimService) GetInfluencerClaims(ctx *fiber.Ctx, request dto.GetInflue
 			}
 
 			// use claim model in anoter func for analysis and verification here
+			fmt.Println(claim)
 
-			err = s.claimDao.Insert(claim)
-			if err != nil {
-				return dto.GetInfluencerClaimsResponse{}, fiber.StatusInternalServerError, err
-			}
+			// err = s.claimDao.Insert(claim)
+			// if err != nil {
+			// 	return dto.GetInfluencerClaimsResponse{}, fiber.StatusInternalServerError, err
+			// }
 
 			tweetClaim := dto.Claim{
 				Raw:       tweet.Text,
 				Source:    1,
 				Timestamp: tweetTime,
+				Claim: parsedClaim,
 				//InfluencerID: influencer.ID,
 			}
 
 			claims = append(claims, tweetClaim)
+		}
+		if len(claims) < 1 {
+			return dto.GetInfluencerClaimsResponse{}, fiber.StatusNotFound, fmt.Errorf("No claims found for the specified username")
 		}
 	}
 
@@ -164,24 +173,24 @@ func (s *claimService) AnalyzeAndVerifyClaim(claim models.Claim) error {
 	var status string
 
 	if trustScore >= 0.75 {
-		status = "Verified"
+		status = enums.Verified
 	} else if trustScore >= 0.4 {
-		status = "Questionable"
+		status = enums.Questionable
 	} else {
-		status = "Debunked"
+		status = enums.Debunked
 	}
 
 	// Step 4: Store Verification Result
 	claimVerification := models.ClaimVerification{
-		ClaimID: claim.ID,
-		//VerifiedBy: ,
-		Status:    status,
-		Score:     trustScore,
-		Evidence:  result.BestResult.Title,
-		Comment:   result.BestResult.Snippet,
-		SourceUrl: result.BestResult.Link,
-		CreatedAt: time.Now(),
-		DelFlg:    false,
+		ClaimID:    claim.ID,
+		VerifiedBy: result.BestResult.PublicationInfo,
+		Status:     status,
+		Score:      trustScore,
+		Evidence:   result.BestResult.Title,
+		Comment:    result.BestResult.Snippet,
+		SourceUrl:  result.BestResult.Link,
+		CreatedAt:  time.Now(),
+		DelFlg:     false,
 	}
 	_, err = s.claimVerificationDao.Insert(claimVerification)
 	if err != nil {

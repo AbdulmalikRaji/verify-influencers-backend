@@ -26,21 +26,21 @@ type VerificationResult struct {
 		Title           string `json:"title"`
 		Link            string `json:"link"`
 		PublicationInfo string `json:"publicationInfo"`
-		Snippet        string `json:"snippet"`
+		Snippet         string `json:"snippet"`
 	} `json:"best_result"`
 }
 
 // Define the API URL
-var url = fmt.Sprintf("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=%s", os.Getenv("GEMINI_API_KEY"))
 
 func ExtractClaim(tweetText string) (string, error) {
+	var url = fmt.Sprintf("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=%s", os.Getenv("GEMINI_API_KEY"))
 
 	// Define the request payload
 	payload := map[string]interface{}{
 		"contents": []map[string]interface{}{
 			{
 				"parts": []map[string]string{
-					{"text": fmt.Sprintf("Extract any health-related claim from the following text as a short sentence: \"%s\"", tweetText)},
+					{"text": fmt.Sprintf("Extract any health-related claim from the following text as a short sentence. If there is no claim, just respond 'no claim': \"%s\"", tweetText)},
 				},
 			},
 		},
@@ -89,13 +89,20 @@ func ExtractClaim(tweetText string) (string, error) {
 
 	// Extract the first parts.text
 	if len(geminiResp.Candidates) > 0 && len(geminiResp.Candidates[0].Content.Parts) > 0 {
-		return geminiResp.Candidates[0].Content.Parts[0].Text, nil
+		claim := strings.TrimSpace(geminiResp.Candidates[0].Content.Parts[0].Text)
+		if strings.ToLower(claim) == "no claim" {
+			return "", nil // No claim, move to the next tweet
+		}
+		return claim, nil
 	}
 
 	return "", fmt.Errorf("no claim found in response")
 }
 
+
 func ExtractTopic(claim string) (string, error) {
+
+	var url = fmt.Sprintf("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=%s", os.Getenv("GEMINI_API_KEY"))
 
 	// Define the request payload
 	payload := map[string]interface{}{
@@ -158,6 +165,9 @@ func ExtractTopic(claim string) (string, error) {
 }
 
 func GetScore(query string, searchResults string) (*VerificationResult, error) {
+
+	var url = fmt.Sprintf("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=%s", os.Getenv("GEMINI_API_KEY"))
+
 	// Construct a JSON representation of search results for Gemini
 	resultsJSON, err := json.Marshal(searchResults)
 	if err != nil {
@@ -245,5 +255,3 @@ func GetScore(query string, searchResults string) (*VerificationResult, error) {
 
 	return nil, fmt.Errorf("no valid response from Gemini")
 }
-
-
