@@ -78,11 +78,12 @@ func (s *claimService) GetInfluencerClaims(ctx *fiber.Ctx, request dto.GetInflue
 				URL:            user.URL,
 				DelFlg:         false,
 			}
-			fmt.Println(newInfluencer)
-			// influencer, err = s.influencerDao.Insert(newInfluencer)
-			// if err != nil {
-			// 	return dto.GetInfluencerClaimsResponse{}, fiber.StatusInternalServerError, err
-			// }
+
+			influencer, err = s.influencerDao.Insert(newInfluencer)
+			if err != nil {
+				return dto.GetInfluencerClaimsResponse{}, fiber.StatusInternalServerError, err
+			}
+
 		} else if err != nil {
 			return dto.GetInfluencerClaimsResponse{}, fiber.StatusInternalServerError, err
 		}
@@ -111,12 +112,14 @@ func (s *claimService) GetInfluencerClaims(ctx *fiber.Ctx, request dto.GetInflue
 			}
 
 			// use claim model in anoter func for analysis and verification here
-			fmt.Println(claim)
-
-			// err = s.claimDao.Insert(claim)
-			// if err != nil {
-			// 	return dto.GetInfluencerClaimsResponse{}, fiber.StatusInternalServerError, err
-			// }
+			err = s.claimDao.Insert(claim)
+			if err != nil {
+				return dto.GetInfluencerClaimsResponse{}, fiber.StatusInternalServerError, err
+			}
+			err = s.AnalyzeAndVerifyClaim(claim)
+			if err != nil {
+                return dto.GetInfluencerClaimsResponse{}, fiber.StatusInternalServerError, err
+            }
 
 			tweetClaim := dto.Claim{
 				Raw:       tweet.Text,
@@ -155,9 +158,11 @@ func (s *claimService) AnalyzeAndVerifyClaim(claim models.Claim) error {
 		if err != nil {
 			return err
 		}
+	}else if err != nil {
+		return err
 	}
 
-	// Step 2: Verify Claim and Get Score
+	// Verify Claim and Get Score
 	verificationResult, err := serper.VerifyClaim(claim.ParsedClaim)
 	if err != nil {
 		return err
@@ -168,7 +173,7 @@ func (s *claimService) AnalyzeAndVerifyClaim(claim models.Claim) error {
 		return err
 	}
 
-	// Step 3: Determine Status Based on Score
+	// Determine Status Based on Score
 	trustScore := result.Score // AI provides a score between 0 and 1
 	var status string
 
@@ -180,7 +185,7 @@ func (s *claimService) AnalyzeAndVerifyClaim(claim models.Claim) error {
 		status = enums.Debunked
 	}
 
-	// Step 4: Store Verification Result
+	// Store Verification Result
 	claimVerification := models.ClaimVerification{
 		ClaimID:    claim.ID,
 		VerifiedBy: result.BestResult.PublicationInfo,
@@ -197,7 +202,7 @@ func (s *claimService) AnalyzeAndVerifyClaim(claim models.Claim) error {
 		return err
 	}
 
-	// Step 5: Link Influencer to Topic
+	// Link Influencer to Topic
 	influencerTopic := models.InfluencerTopic{
 		InfluencerID: claim.InfluencerID,
 		TopicID:      existingTopic.ID,
