@@ -13,6 +13,10 @@ type Tweet struct {
 	CreatedAt string `json:"created_at"`
 }
 
+type TwitterUserResponse struct {
+	Data TwitterUser `json:"data"`
+}
+
 type TwitterUser struct {
 	Name              string            `json:"name"`
 	Username          string            `json:"username"`
@@ -87,11 +91,11 @@ func GetTwitterUserByUsername(username string) (*TwitterUser, error) {
 		return nil, fmt.Errorf("twitter API returned status %d", resp.StatusCode)
 	}
 
-	// Decode the JSON response
-	var user TwitterUser
-	if err := json.NewDecoder(resp.Body).Decode(&user); err != nil {
+	var response TwitterUserResponse
+	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
 		return nil, fmt.Errorf("failed to decode response: %w", err)
 	}
 
-	return &user, nil
+	// Return the nested user data
+	return &response.Data, nil
 }
