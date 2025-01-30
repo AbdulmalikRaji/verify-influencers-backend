@@ -10,6 +10,7 @@ import (
 	"github.com/abdulmalikraji/verify-influencers-backend/db/connection"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/joho/godotenv"
 )
 
@@ -26,14 +27,15 @@ func main() {
 	app := fiber.New()
 
 	app.Use(cors.New())
+	app.Use(recover.New())
 
 	config.InitializeRoutes(app, client)
 
-	// testCase, err := podchaser.FindPodcasts("Dr Gabrielle Lyon")
+	// testCase, err := twitter.GetTwitterUserByUsername("drgabriellelyon")
 	// if err != nil {
-	// 	log.Fatalf("Error finding Pod: %v\n", err)
+	// 	log.Fatalf("Error finding user: %v\n", err)
 	// }
-	// fmt.Println("Test result: ", testCase)
+	// fmt.Println("Test result: ", *testCase)
 
 	// Start the server in a goroutine
 	go func() {

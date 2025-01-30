@@ -74,12 +74,12 @@ func (d dataAccess) FindById(id int) (models.Claim, error) {
 
 func (d dataAccess) Insert(item models.Claim) error {
 	// Normalize the claim text (case-insensitive comparison)
-	normalizedClaim := strings.ToLower(strings.TrimSpace(item.Content))
+	normalizedClaim := strings.ToLower(strings.TrimSpace(item.ParsedClaim))
 
 	// Check if a claim with the same text and influencer_id already exists
 	var existingClaim models.Claim
 	err := d.db.Table(item.TableName()).
-		Where("LOWER(content) = ? AND influencer_id = ?", normalizedClaim, item.InfluencerID).
+		Where("LOWER(parsed_claim) = ? AND influencer_id = ?", normalizedClaim, item.InfluencerID).
 		First(&existingClaim).Error
 
 	if err == nil {
