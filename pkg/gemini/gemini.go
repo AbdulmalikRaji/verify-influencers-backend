@@ -99,7 +99,6 @@ func ExtractClaim(tweetText string) (string, error) {
 	return "", fmt.Errorf("no claim found in response")
 }
 
-
 func ExtractTopic(claim string) (string, error) {
 
 	var url = fmt.Sprintf("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=%s", os.Getenv("GEMINI_API_KEY"))
@@ -242,6 +241,20 @@ func GetScore(query string, searchResults string) (*VerificationResult, error) {
 	// Extract the JSON response from Gemini
 	if len(geminiResp.Candidates) > 0 && len(geminiResp.Candidates[0].Content.Parts) > 0 {
 		rawJSON := strings.TrimSpace(geminiResp.Candidates[0].Content.Parts[0].Text)
+
+		// Remove the "json" part at the beginning if it exists
+		if strings.HasPrefix(rawJSON, "```json") {
+			rawJSON = strings.TrimPrefix(rawJSON, "```json")
+			rawJSON = strings.TrimSpace(rawJSON)
+		}
+
+		// Remove the closing "```" if it exists
+		if strings.HasSuffix(rawJSON, "```") {
+			rawJSON = strings.TrimSuffix(rawJSON, "```")
+			rawJSON = strings.TrimSpace(rawJSON)
+		}
+
+		fmt.Println(rawJSON) // Check the cleaned-up JSON string
 
 		// Define struct to parse the extracted JSON
 		var verificationResult VerificationResult
