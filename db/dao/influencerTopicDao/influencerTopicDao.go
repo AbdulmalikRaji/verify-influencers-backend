@@ -10,7 +10,7 @@ type DataAccess interface {
 	// Postgres Data Access Object Methods
 	FindAll() ([]models.InfluencerTopic, error)
 	FindById(id int) (models.InfluencerTopic, error)
-	FindAllByInfluencerId(influencerId string) ([]models.InfluencerTopic, error)
+	FindAllByInfluencerId(influencerId int) ([]models.InfluencerTopic, error)
 	Insert(item models.InfluencerTopic) (models.InfluencerTopic, error)
 	Update(item models.InfluencerTopic) error
 	SoftDelete(id int) error
@@ -47,7 +47,7 @@ func (d dataAccess) FindById(id int) (models.InfluencerTopic, error) {
 	return influencerTopic, nil
 }
 
-func (d dataAccess) FindAllByInfluencerId(influencerId string) ([]models.InfluencerTopic, error) {
+func (d dataAccess) FindAllByInfluencerId(influencerId int) ([]models.InfluencerTopic, error) {
 
 	var influencerTopics []models.InfluencerTopic
 	result := d.db.Table(models.InfluencerTopic{}.TableName()).Where("influencer_id = ? AND del_flg = ?", influencerId, false).Find(&influencerTopics)

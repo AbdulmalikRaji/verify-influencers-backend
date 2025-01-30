@@ -254,7 +254,7 @@ func GetScore(query string, searchResults string) (*VerificationResult, error) {
 			rawJSON = strings.TrimSpace(rawJSON)
 		}
 
-		fmt.Println(rawJSON) // Check the cleaned-up JSON string
+		// fmt.Println(rawJSON) // Check the cleaned-up JSON string
 
 		// Define struct to parse the extracted JSON
 		var verificationResult VerificationResult

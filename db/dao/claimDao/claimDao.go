@@ -12,9 +12,9 @@ import (
 type DataAccess interface {
 	// Postgres Data Access Object Methods
 	FindAll() ([]models.Claim, error)
-	FindAllByInfluencerId(influencerId string) ([]models.Claim, error)
+	FindAllByInfluencerId(influencerId int) ([]models.Claim, error)
 	FindById(id int) (models.Claim, error)
-	Insert(item models.Claim) error
+	Insert(item models.Claim) (models.Claim, error)
 	Update(item models.Claim) error
 	SoftDelete(id int) error
 	Delete(id int) error
@@ -40,7 +40,7 @@ func (d dataAccess) FindAll() ([]models.Claim, error) {
 	return claims, nil
 }
 
-func (d dataAccess) FindAllByInfluencerId(influencerId string) ([]models.Claim, error) {
+func (d dataAccess) FindAllByInfluencerId(influencerId int) ([]models.Claim, error) {
 
 	var claims []models.Claim
 	result := d.db.Table(models.Claim{}.TableName()).Where("influencer_id = ? AND del_flg = ?", influencerId, false).Find(&claims)
@@ -72,7 +72,7 @@ func (d dataAccess) FindById(id int) (models.Claim, error) {
 // 	return nil
 // }
 
-func (d dataAccess) Insert(item models.Claim) error {
+func (d dataAccess) Insert(item models.Claim) (models.Claim, error) {
 	// Normalize the claim text (case-insensitive comparison)
 	normalizedClaim := strings.ToLower(strings.TrimSpace(item.ParsedClaim))
 
@@ -85,19 +85,19 @@ func (d dataAccess) Insert(item models.Claim) error {
 	if err == nil {
 		// Claim already exists for the same influencer, skip insertion
 		fmt.Println("Claim already exists for ifluencer")
-		return nil
+		return existingClaim, nil
 	} else if err != gorm.ErrRecordNotFound {
 		// Return any other database error
-		return err
+		return models.Claim{}, err
 	}
 
 	// Insert the new claim if it doesn't exist
 	result := d.db.Table(item.TableName()).Create(&item)
 	if result.Error != nil {
-		return result.Error
+		return models.Claim{}, result.Error
 	}
 
-	return nil
+	return item, nil
 }
 
 func (d dataAccess) Update(item models.Claim) error {

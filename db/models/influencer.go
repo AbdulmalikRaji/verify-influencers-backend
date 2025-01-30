@@ -3,7 +3,7 @@ package models
 import "time"
 
 type Influencer struct {
-	ID         uint    `gorm:"primaryKey;autoIncrement;not null" json:"id"`
+	ID         int     `gorm:"primaryKey;autoIncrement;not null" json:"id"`
 	Name       string  `gorm:"type:varchar(100);not null" json:"name"`
 	Username   string  `gorm:"type:varchar(100);uniqueIndex;not null" json:"username"`
 	Platform   string  `gorm:"type:varchar(50);not null" json:"platform"` // e.g., Twitter, Podcast
@@ -11,6 +11,7 @@ type Influencer struct {
 	TrustScore float64 `gorm:"type:float" json:"trust_score"`
 	Category   string  `gorm:"type:varchar(100)" json:"category"`
 	URL        string  `gorm:"not null" json:"url"`
+	Bio        string  `gorm:"not null" json:"bio"`
 
 	// Abstract fields
 	CreatedBy      string    `gorm:"column:created_by" json:"created_by"`

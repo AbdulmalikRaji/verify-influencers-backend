@@ -23,12 +23,19 @@ func InitializeRoutes(app *fiber.App, client connection.Client) {
 
 	//services
 	claimService := services.NewClaimService(claimDataAccess, influencerDataAccess, influencerTopicDataAccess, topicDataAccess, claimVerificationDataAccess)
+	influencerService := services.NewInfluencerService(claimDataAccess, influencerDataAccess, influencerTopicDataAccess, topicDataAccess, claimVerificationDataAccess)
 
 	//Handlers
 	claimHandler := handlers.NewClaimController(claimService)
+	influencerHandler := handlers.NewInfluencerController(influencerService)
 
 	// Routes
 	api := app.Group("/api/v1")
-	api.Get("/claims", claimHandler.GetInfluencerClaims)
+
+	//claims
+	api.Get("/claims", claimHandler.FindInfluencerClaims)
+
+	// influencers
+	api.Get("/influencer", influencerHandler.GetInfluencer)
 
 }

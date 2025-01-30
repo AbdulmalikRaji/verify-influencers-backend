@@ -11,14 +11,14 @@ type Claim struct {
 	Timestamp time.Time `json:"timestamp"`
 }
 
-type GetInfluencerClaimsRequest struct {
+type FindInfluencerClaimsRequest struct {
 	Username  string    `json:"username"`
 	Source    int       `json:"source"`
 	StartDate time.Time `json:"start_date"`
 	EndDate   time.Time `json:"end_date"`
 }
 
-type GetInfluencerClaimsResponse struct {
+type FindInfluencerClaimsResponse struct {
 	Claims   []Claim `json:"claims"`
 	Username string  `json:"username"`
 }

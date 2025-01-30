@@ -10,7 +10,7 @@ import (
 )
 
 type ClaimController interface {
-	GetInfluencerClaims(c *fiber.Ctx) error
+	FindInfluencerClaims(c *fiber.Ctx) error
 }
 
 type claimController struct {
@@ -23,8 +23,8 @@ func NewClaimController(service services.ClaimService) ClaimController {
 	}
 }
 
-func (s claimController) GetInfluencerClaims(c *fiber.Ctx) error {
-	var claim dto.GetInfluencerClaimsRequest
+func (s claimController) FindInfluencerClaims(c *fiber.Ctx) error {
+	var claim dto.FindInfluencerClaimsRequest
 	err := c.QueryParser(&claim)
 	if err != nil {
 		log.Println(err)
@@ -60,7 +60,7 @@ func (s claimController) GetInfluencerClaims(c *fiber.Ctx) error {
 		}
 	}
 
-	response, status, err := s.service.GetInfluencerClaims(c, claim)
+	response, status, err := s.service.FindInfluencerClaims(c, claim)
 
 	if err != nil {
 		log.Println(err)

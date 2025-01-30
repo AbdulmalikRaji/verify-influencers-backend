@@ -3,7 +3,7 @@ package models
 import "time"
 
 type Topic struct {
-	ID          uint      `gorm:"primaryKey;autoIncrement;not null" json:"id"`
+	ID          int      `gorm:"primaryKey;autoIncrement;not null" json:"id"`
 	Name        string    `gorm:"unique;not null" json:"name"`          // Name of the topic (e.g., "sleep", "hormones")
 	Description string    `gorm:"type:varchar(255)" json:"description"`  // Optional description of the topic
 	CreatedBy   string    `gorm:"column:created_by" json:"created_by"`   // User who created the topic

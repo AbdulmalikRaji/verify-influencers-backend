@@ -9,7 +9,7 @@ import (
 type DataAccess interface {
 	// Postgres Data Access Object Methods
 	FindAll() ([]models.ClaimVerification, error)
-	FindAllByClaimId(claimId string) ([]models.ClaimVerification, error)
+	FindByClaimId(claimId int) (models.ClaimVerification, error)
 	FindById(id int) (models.ClaimVerification, error)
 	Insert(item models.ClaimVerification) (models.ClaimVerification, error)
 	Update(item models.ClaimVerification) error
@@ -37,12 +37,12 @@ func (d dataAccess) FindAll() ([]models.ClaimVerification, error) {
 	return claimVerifications, nil
 }
 
-func (d dataAccess) FindAllByClaimId(claimId string) ([]models.ClaimVerification, error) {
+func (d dataAccess) FindByClaimId(claimId int) (models.ClaimVerification, error) {
 
-	var claimVerifications []models.ClaimVerification
-	result := d.db.Table(models.ClaimVerification{}.TableName()).Where("claim_id = ? AND del_flg = ?", claimId, false).Find(&claimVerifications)
+	var claimVerifications models.ClaimVerification
+	result := d.db.Table(models.ClaimVerification{}.TableName()).Where("claim_id = ? AND del_flg = ?", claimId, false).First(&claimVerifications)
 	if result.Error != nil {
-		return []models.ClaimVerification{}, result.Error
+		return models.ClaimVerification{}, result.Error
 	}
 
 	return claimVerifications, nil
