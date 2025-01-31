@@ -1,6 +1,7 @@
 package claimDao
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -85,7 +86,7 @@ func (d dataAccess) Insert(item models.Claim) (models.Claim, error) {
 	if err == nil {
 		// Claim already exists for the same influencer, skip insertion
 		fmt.Println("Claim already exists for ifluencer")
-		return existingClaim, nil
+		return existingClaim, errors.New("claim already exists for influencer")
 	} else if err != gorm.ErrRecordNotFound {
 		// Return any other database error
 		return models.Claim{}, err

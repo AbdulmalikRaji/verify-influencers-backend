@@ -1,6 +1,7 @@
 package services
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -118,9 +119,14 @@ func (s *claimService) FindInfluencerClaims(ctx *fiber.Ctx, request dto.FindInfl
 
 		// use claim model in anoter func for analysis and verification here
 		madeClaim, err := s.claimDao.Insert(claim)
-		if err != nil {
-			return dto.FindInfluencerClaimsResponse{}, fiber.StatusInternalServerError, err
+		ErrClaimAlreadyExists := errors.New("claim already exists for influencer")
+		if errors.Is(err, ErrClaimAlreadyExists) {
+			fmt.Println("Skipping insert: claim already exists", claim)
+			continue
+		} else if err != nil {
+			fmt.Println("Error inserting claim:", err)
 		}
+
 		err = s.AnalyzeAndVerifyClaim(madeClaim)
 		if err != nil {
 			return dto.FindInfluencerClaimsResponse{}, fiber.StatusInternalServerError, err

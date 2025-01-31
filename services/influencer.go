@@ -131,7 +131,7 @@ func (s influencerService) GetAllInfluencers(ctx *fiber.Ctx) (dto.GetAllInfluenc
 			}
 
 			score += verification.Score
-
+			
 		}
 
 		influencersResponse = append(influencersResponse, dto.GetInfluencer{
@@ -143,11 +143,12 @@ func (s influencerService) GetAllInfluencers(ctx *fiber.Ctx) (dto.GetAllInfluenc
 			ClaimCount: len(claims),
 			TrustScore: (score * 100.0) / float64(len(claims)),
 		})
+		totalScore += (score * 100.0) / float64(len(claims))
 
 	}
 	response := dto.GetAllInfluencersResponse{
 		Influencers:       influencersResponse,
-		AverageTrustScore: (totalScore * 100.0) / float64(len(influencers)),
+		AverageTrustScore: totalScore / float64(len(influencers)),
 		InfluencerCount:   len(influencers),
 		TotalClaimCount:   totalClaims,
 	}
