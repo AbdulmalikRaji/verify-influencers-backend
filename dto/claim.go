@@ -13,7 +13,6 @@ type Claim struct {
 
 type FindInfluencerClaimsRequest struct {
 	Username  string    `json:"username"`
-	Source    int       `json:"source"`
 	StartDate time.Time `json:"start_date"`
 	EndDate   time.Time `json:"end_date"`
 }

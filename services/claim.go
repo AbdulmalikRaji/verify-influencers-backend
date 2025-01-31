@@ -52,96 +52,93 @@ func (s *claimService) FindInfluencerClaims(ctx *fiber.Ctx, request dto.FindInfl
 	var claims []dto.Claim
 	var influencer models.Influencer
 
-	if request.Source == 1 {
+	claimTweets, err := twitter.GetTwitterClaimsV2(request.Username, utils.ConvertTimeToXFormat(request.StartDate), utils.ConvertTimeToXFormat(request.EndDate))
+	if err != nil {
+		return dto.FindInfluencerClaimsResponse{}, fiber.StatusInternalServerError, err
+	}
 
-		claimTweets, err := twitter.GetTwitterClaimsV2(request.Username, utils.ConvertTimeToXFormat(request.StartDate), utils.ConvertTimeToXFormat(request.EndDate))
+	influencer, err = s.influencerDao.FindByUsername(request.Username)
+	if err != nil && err.Error() == "record not found" {
+
+		user, err := twitter.GetTwitterUserByUsername(request.Username)
 		if err != nil {
 			return dto.FindInfluencerClaimsResponse{}, fiber.StatusInternalServerError, err
 		}
 
-		influencer, err = s.influencerDao.FindByUsername(request.Username)
-		if err != nil && err.Error() == "record not found" {
+		newInfluencer := models.Influencer{
+			Name:           user.Name,
+			Username:       request.Username,
+			Platform:       "X",
+			CreatedAt:      time.Now(),
+			LastModifiedAt: time.Now(),
+			TrustScore:     0,
+			Followers:      user.UserPublicMetrics.Followers,
+			URL:            user.URL,
+			Bio:            user.Description,
+			DelFlg:         false,
+		}
 
-			user, err := twitter.GetTwitterUserByUsername(request.Username)
-			if err != nil {
-				return dto.FindInfluencerClaimsResponse{}, fiber.StatusInternalServerError, err
-			}
-
-			newInfluencer := models.Influencer{
-				Name:           user.Name,
-				Username:       request.Username,
-				Platform:       "X",
-				CreatedAt:      time.Now(),
-				LastModifiedAt: time.Now(),
-				TrustScore:     0,
-				Followers:      user.UserPublicMetrics.Followers,
-				URL:            user.URL,
-				Bio:            user.Description,
-				DelFlg:         false,
-			}
-
-			influencer, err = s.influencerDao.Insert(newInfluencer)
-			if err != nil {
-				return dto.FindInfluencerClaimsResponse{}, fiber.StatusInternalServerError, err
-			}
-
-		} else if err != nil {
+		influencer, err = s.influencerDao.Insert(newInfluencer)
+		if err != nil {
 			return dto.FindInfluencerClaimsResponse{}, fiber.StatusInternalServerError, err
 		}
 
-		for _, tweet := range claimTweets {
-			tweetTime, err := utils.ParseTweetTime(tweet.CreatedAt)
-			if err != nil {
-				return dto.FindInfluencerClaimsResponse{}, fiber.StatusInternalServerError, err
-			}
+	} else if err != nil {
+		return dto.FindInfluencerClaimsResponse{}, fiber.StatusInternalServerError, err
+	}
 
-			parsedClaim, err := gemini.ExtractClaim(tweet.Text)
-			if err != nil {
-				return dto.FindInfluencerClaimsResponse{}, fiber.StatusInternalServerError, err
-			}
-			if parsedClaim == "" {
-				continue
-			}
-
-			topic, err := gemini.ExtractTopic(parsedClaim)
-			if err != nil {
-				return dto.FindInfluencerClaimsResponse{}, fiber.StatusInternalServerError, err
-			}
-
-			claim := models.Claim{
-				Content:      tweet.Text,
-				ParsedClaim:  parsedClaim,
-				Source:       "tweet",
-				ClaimedAt:    tweetTime,
-				InfluencerID: influencer.ID,
-				Topic:        topic,
-				SourceURL:    fmt.Sprintf("https://x.com/%s/status/%s", request.Username, tweet.ID),
-			}
-
-			// use claim model in anoter func for analysis and verification here
-			madeClaim, err := s.claimDao.Insert(claim)
-			if err != nil {
-				return dto.FindInfluencerClaimsResponse{}, fiber.StatusInternalServerError, err
-			}
-			err = s.AnalyzeAndVerifyClaim(madeClaim)
-			if err != nil {
-				return dto.FindInfluencerClaimsResponse{}, fiber.StatusInternalServerError, err
-			}
-
-			tweetClaim := dto.Claim{
-				Raw:       tweet.Text,
-				Source:    1,
-				Timestamp: tweetTime,
-				Claim:     parsedClaim,
-				Topic:     topic,
-				//InfluencerID: influencer.ID,
-			}
-
-			claims = append(claims, tweetClaim)
+	for _, tweet := range claimTweets {
+		tweetTime, err := utils.ParseTweetTime(tweet.CreatedAt)
+		if err != nil {
+			return dto.FindInfluencerClaimsResponse{}, fiber.StatusInternalServerError, err
 		}
-		if len(claims) < 1 {
-			return dto.FindInfluencerClaimsResponse{}, fiber.StatusNotFound, fmt.Errorf("No claims found for the specified username")
+
+		parsedClaim, err := gemini.ExtractClaim(tweet.Text)
+		if err != nil {
+			return dto.FindInfluencerClaimsResponse{}, fiber.StatusInternalServerError, err
 		}
+		if parsedClaim == "" {
+			continue
+		}
+
+		topic, err := gemini.ExtractTopic(parsedClaim)
+		if err != nil {
+			return dto.FindInfluencerClaimsResponse{}, fiber.StatusInternalServerError, err
+		}
+
+		claim := models.Claim{
+			Content:      tweet.Text,
+			ParsedClaim:  parsedClaim,
+			Source:       "tweet",
+			ClaimedAt:    tweetTime,
+			InfluencerID: influencer.ID,
+			Topic:        topic,
+			SourceURL:    fmt.Sprintf("https://x.com/%s/status/%s", request.Username, tweet.ID),
+		}
+
+		// use claim model in anoter func for analysis and verification here
+		madeClaim, err := s.claimDao.Insert(claim)
+		if err != nil {
+			return dto.FindInfluencerClaimsResponse{}, fiber.StatusInternalServerError, err
+		}
+		err = s.AnalyzeAndVerifyClaim(madeClaim)
+		if err != nil {
+			return dto.FindInfluencerClaimsResponse{}, fiber.StatusInternalServerError, err
+		}
+
+		tweetClaim := dto.Claim{
+			Raw:       tweet.Text,
+			Source:    1,
+			Timestamp: tweetTime,
+			Claim:     parsedClaim,
+			Topic:     topic,
+			//InfluencerID: influencer.ID,
+		}
+
+		claims = append(claims, tweetClaim)
+	}
+	if len(claims) < 1 {
+		return dto.FindInfluencerClaimsResponse{}, fiber.StatusNotFound, fmt.Errorf("No claims found for the specified username")
 	}
 
 	return dto.FindInfluencerClaimsResponse{Claims: claims, Username: request.Username, InfluencerID: influencer.ID}, fiber.StatusOK, nil
