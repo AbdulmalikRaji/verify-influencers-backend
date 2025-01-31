@@ -37,5 +37,7 @@ func InitializeRoutes(app *fiber.App, client connection.Client) {
 
 	// influencers
 	api.Get("/influencer", influencerHandler.GetInfluencer)
+	api.Get("/influencers", influencerHandler.GetAllInfluencers)
+
 
 }

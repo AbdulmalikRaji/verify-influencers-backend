@@ -19,6 +19,7 @@ type FindInfluencerClaimsRequest struct {
 }
 
 type FindInfluencerClaimsResponse struct {
-	Claims   []Claim `json:"claims"`
-	Username string  `json:"username"`
+	Claims       []Claim `json:"claims"`
+	Username     string  `json:"username"`
+	InfluencerID int     `json:"influencer_id"`
 }

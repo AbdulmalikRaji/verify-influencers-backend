@@ -12,6 +12,7 @@ import (
 
 type InfluencerService interface {
 	GetInfluencer(ctx *fiber.Ctx, request dto.GetInfluencerRequest) (dto.GetInfluencerResponse, int, error)
+	GetAllInfluencers(ctx *fiber.Ctx) (dto.GetAllInfluencersResponse, int, error)
 }
 
 type influencerService struct {
@@ -103,4 +104,54 @@ func (s influencerService) GetInfluencer(ctx *fiber.Ctx, request dto.GetInfluenc
 	}
 
 	return response, fiber.StatusOK, nil
+}
+
+func (s influencerService) GetAllInfluencers(ctx *fiber.Ctx) (dto.GetAllInfluencersResponse, int, error) {
+	// Get all influencers from the database
+	influencers, err := s.influencerDao.FindAll()
+	if err != nil {
+		return dto.GetAllInfluencersResponse{}, fiber.StatusInternalServerError, err
+	}
+
+	var influencersResponse []dto.GetInfluencer
+	totalScore := 0.0
+	totalClaims := 0
+	for _, influencer := range influencers {
+		claims, err := s.claimDao.FindAllByInfluencerId(influencer.ID)
+		if err != nil {
+			return dto.GetAllInfluencersResponse{}, fiber.StatusInternalServerError, err
+		}
+
+		totalClaims += len(claims)
+		score := 0.0
+		for _, claim := range claims {
+			verification, err := s.claimVerificationDao.FindByClaimId(claim.ID)
+			if err != nil {
+				return dto.GetAllInfluencersResponse{}, fiber.StatusInternalServerError, err
+			}
+
+			score += verification.Score
+
+		}
+
+		influencersResponse = append(influencersResponse, dto.GetInfluencer{
+			ID:         influencer.ID,
+			Name:       influencer.Name,
+			Username:   influencer.Username,
+			Followers:  influencer.Followers,
+			URL:        influencer.URL,
+			ClaimCount: len(claims),
+			TrustScore: (score * 100.0) / float64(len(claims)),
+		})
+
+	}
+	response := dto.GetAllInfluencersResponse{
+		Influencers:       influencersResponse,
+		AverageTrustScore: (totalScore * 100.0) / float64(len(influencers)),
+		InfluencerCount:   len(influencers),
+		TotalClaimCount:   totalClaims,
+	}
+
+	return response, fiber.StatusOK, nil
+
 }

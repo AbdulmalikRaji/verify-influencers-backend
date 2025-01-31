@@ -10,6 +10,7 @@ import (
 
 type InfluencerController interface {
 	GetInfluencer(c *fiber.Ctx) error
+	GetAllInfluencers(c *fiber.Ctx) error
 }
 
 type influencerController struct {
@@ -42,6 +43,30 @@ func (s influencerController) GetInfluencer(c *fiber.Ctx) error {
 	}
 
 	response, status, err := s.service.GetInfluencer(c, influencer)
+
+	if err != nil {
+		log.Println(err)
+		return c.Status(fiber.StatusInternalServerError).JSON(&fiber.Map{
+			"success": false,
+			"status":  status,
+			"message": err.Error(),
+			"data":    nil,
+		})
+	}
+
+	err = c.JSON(&fiber.Map{
+		"success": true,
+		"status":  status,
+		"message": "influencers found successfully",
+		"data":    response,
+	})
+
+	return err
+}
+
+func (s influencerController) GetAllInfluencers(c *fiber.Ctx) error {
+	
+	response, status, err := s.service.GetAllInfluencers(c)
 
 	if err != nil {
 		log.Println(err)

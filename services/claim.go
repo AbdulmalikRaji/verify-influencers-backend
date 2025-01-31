@@ -144,7 +144,7 @@ func (s *claimService) FindInfluencerClaims(ctx *fiber.Ctx, request dto.FindInfl
 		}
 	}
 
-	return dto.FindInfluencerClaimsResponse{Claims: claims, Username: request.Username}, fiber.StatusOK, nil
+	return dto.FindInfluencerClaimsResponse{Claims: claims, Username: request.Username, InfluencerID: influencer.ID}, fiber.StatusOK, nil
 }
 
 func (s *claimService) AnalyzeAndVerifyClaim(claim models.Claim) error {
