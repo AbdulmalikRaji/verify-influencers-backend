@@ -1,6 +1,6 @@
 [build]
-  command = "go build -o verify-influencers-backend/cmd/main verify-influencers-backend/cmd/main.go"
-  publish = "verify-influencers-backend/cmd"
+  command = "go build -o cmd/main cmd/main.go"
+  publish = "cmd"
 
 [[redirects]]
   from = "/*"
