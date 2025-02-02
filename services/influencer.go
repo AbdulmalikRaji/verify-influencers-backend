@@ -54,7 +54,7 @@ func (s influencerService) GetInfluencer(ctx *fiber.Ctx, request dto.GetInfluenc
 	}
 	var topics []string
 	for _, influencerTopic := range influencerTopics {
-		topic, err := s.topicDao.FindById(influencerTopic.ID)
+		topic, err := s.topicDao.FindById(influencerTopic.TopicID)
 		if err != nil {
 			return dto.GetInfluencerResponse{}, fiber.StatusInternalServerError, err
 		}
@@ -96,8 +96,9 @@ func (s influencerService) GetInfluencer(ctx *fiber.Ctx, request dto.GetInfluenc
 		Name:       influencer.Name,
 		Username:   influencer.Username,
 		Followers:  influencer.Followers,
-		URL:        influencer.URL,
+		URL:        "https://x.com/" + influencer.Username,
 		Bio:        influencer.Bio,
+		ImageURL:   influencer.ImageURL,
 		TrustScore: (score * 100) / float64(len(claims)),
 		Topics:     topics,
 		Claims:     claims,
@@ -131,7 +132,7 @@ func (s influencerService) GetAllInfluencers(ctx *fiber.Ctx) (dto.GetAllInfluenc
 			}
 
 			score += verification.Score
-			
+
 		}
 
 		influencersResponse = append(influencersResponse, dto.GetInfluencer{
