@@ -12,6 +12,7 @@ type Influencer struct {
 	Category   string  `gorm:"type:varchar(100)" json:"category"`
 	URL        string  `gorm:"not null" json:"url"`
 	Bio        string  `gorm:"not null" json:"bio"`
+	ImageURL   string  `gorm:"type:varchar(500)" json:"image_url"`
 
 	// Abstract fields
 	CreatedBy      string    `gorm:"column:created_by" json:"created_by"`

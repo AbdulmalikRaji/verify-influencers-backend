@@ -3,8 +3,7 @@ package dto
 import "time"
 
 type GetInfluencerRequest struct {
-	ID       *int   `json:"id"`
-	Username string `json:"username"`
+	ID *int `json:"id"`
 }
 
 type GetInfluencerResponse struct {
@@ -14,6 +13,7 @@ type GetInfluencerResponse struct {
 	TrustScore float64           `json:"trust_score"`
 	URL        string            `json:"url"`
 	Bio        string            `json:"bio"`
+	ImageURL   string            `json:"image_url"`
 	Claims     []InfluencerClaim `json:"claims"`
 	Topics     []string          `json:"topics"`
 }

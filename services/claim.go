@@ -76,6 +76,7 @@ func (s *claimService) FindInfluencerClaims(ctx *fiber.Ctx, request dto.FindInfl
 			Followers:      user.UserPublicMetrics.Followers,
 			URL:            user.URL,
 			Bio:            user.Description,
+			ImageURL:       user.ProfileImage,
 			DelFlg:         false,
 		}
 

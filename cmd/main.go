@@ -39,7 +39,7 @@ func main() {
 
 	// Start the server in a goroutine
 	go func() {
-		if err := app.Listen(":3000"); err != nil {
+		if err := app.Listen(":4000"); err != nil {
 			log.Fatalf("Failed to start server: %v\n", err)
 		}
 	}()
