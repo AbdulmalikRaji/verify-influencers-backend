@@ -1,0 +1,8 @@
+[build]
+  command = "go build -o verify-influencers-backend/cmd/main verify-influencers-backend/cmd/main.go"
+  publish = "verify-influencers-backend/cmd"
+
+[[redirects]]
+  from = "/*"
+  to = "/main"
+  status = 200

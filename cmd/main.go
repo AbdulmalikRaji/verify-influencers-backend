@@ -39,7 +39,11 @@ func main() {
 
 	// Start the server in a goroutine
 	go func() {
-		if err := app.Listen(":4000"); err != nil {
+		port := os.Getenv("PORT")
+		if port == "" {
+			port = "4000" // Default for local dev
+		}
+		if err := app.Listen(":" + port); err != nil {
 			log.Fatalf("Failed to start server: %v\n", err)
 		}
 	}()
